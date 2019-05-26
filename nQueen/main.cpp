@@ -1,25 +1,16 @@
-
-
 #include <iostream>
-#include <ctime>
+#include "Solver.h"
 
+using namespace std;
 
 int main()
 {
-	
-	int n = 8;
+	int n = 200;
 
-	int* board = new int[n];
+	Solver solver(n);
 
-	srand(time(0));
+	solver.Solve();
 
-	for (int i = 0; i < n; i++)
-	{
-		board[i] = rand() % n;
-	}
+	cout << solver.toString();
 
-	for (int i = 0; i < n; i++)
-	{
-		std::cout << board[i] << " ";
-	}
 }
