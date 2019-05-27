@@ -1,26 +1,28 @@
 #pragma once
 #include <string>
 #include <ctime>
+#include <vector>
 using namespace std;
 
 class Solver
 {
 private:
 	int* board;
-	int* conflicts;
 	int size;
+	int MAX_NUMBER_OF_TRIES;
 
 public:
 	Solver(int problemsize);
 	~Solver();
-	void Solve();
+	void solve();
 	string toString() const;
 
 private:
-	void updateConflicts(const int* board, int* conflicts, const int size);
-	void resetArray(int* array, int size);
-	void conflictsInColumn(const int* board, int column, int* conflicts, int size);
-	bool isGoal(const int* board, int *conflictsBuffer, int size);
-	int minValue(const int* array, int size, int column);
-	bool hasConflict(const int* board, int row, int column, int size) const;
+
+	int conflictsWith(const int* board, int row, int column, int size);
+	inline void swap(int* array, int i, int j);
+	inline void arrayPermutation(int* array, int size);
+	void initBoard(int* board, int size);
+	void getConflictedQueens(vector<int>& list, const int *board, int boardSize);
+	int minConflictIndexInColumn(const int* board, int column, int size, vector<int> &list);
 };

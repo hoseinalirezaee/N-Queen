@@ -1,16 +1,21 @@
 #include <iostream>
 #include "Solver.h"
-
+#include <chrono>
 using namespace std;
 
 int main()
 {
-	int n = 200;
+	int n = 500;
 
 	Solver solver(n);
 
-	solver.Solve();
+	auto start = chrono::high_resolution_clock::now();
 
-	cout << solver.toString();
+	solver.solve();
+
+	auto end = chrono::high_resolution_clock::now();
+
+	cout << chrono::duration_cast<chrono::milliseconds>(end - start).count() << endl << endl;
+	//cout << solver.toString() << endl;
 
 }

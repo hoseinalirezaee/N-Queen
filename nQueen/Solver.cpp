@@ -1,298 +1,144 @@
 #include "Solver.h"
 #include <sstream>
 #include <vector>
+#include <cmath>
 Solver::Solver(int problemsize)
 {
+	srand(time(NULL));
 	this->size = problemsize;
 	this->board = new int[problemsize];
-	this->conflicts = new int[problemsize];
+	MAX_NUMBER_OF_TRIES = 2 * problemsize;
 }
 
 Solver::~Solver()
 {
 	if (board != nullptr)
 		delete[] board;
-	if (conflicts != nullptr)
-		delete[] conflicts;
 }
 
-void Solver::Solve()
+void Solver::solve()
 {
 	int numberOfTries = 0;
-	bool isFound = false;
-	srand(time(NULL));
+	int conflictedQueensCount = 0;
+	initBoard(this->board, this->size);
 
-	for (int i = 0; i < size; i++)
+	vector<int> candidateQueens;
+	candidateQueens.reserve(size);
+
+	getConflictedQueens(candidateQueens, board, size);
+	conflictedQueensCount = candidateQueens.size();
+
+	while (conflictedQueensCount)
 	{
-		board[i] = rand() % size;
-	}
+		arrayPermutation(this->board, this->size);
+		numberOfTries = 0;
+		conflictedQueensCount = 0;
 
-	while (!(isFound = isGoal(this->board, this->conflicts, this->size))
-		and
-		numberOfTries < 200
-		)
-	{
-		vector<int> temp;
-		for (int i = 0; i < size; i++)
+		while ((conflictedQueensCount = candidateQueens.size()) && numberOfTries < MAX_NUMBER_OF_TRIES)
 		{
-			if (conflicts[i])
-			{
-				temp.push_back(i);
-			}
-		}
-		auto randomColumn = temp.at(rand() %temp.size());
-		//for (randomColumn = 0; randomColumn < size && !conflicts[randomColumn]; randomColumn++);
-
-		if (
-			/*hasConflict(this->board, board[randomColumn], randomColumn, size)*/
-			conflicts[randomColumn]
-			)
-		{
-			conflictsInColumn(this->board, randomColumn, this->conflicts, this->size);
-
-			auto minConflictsIndex = minValue(this->conflicts, size, randomColumn);
-
+			auto randomColumn = candidateQueens.at(rand() % candidateQueens.size());
+			auto minConflictsIndex = minConflictIndexInColumn(board, randomColumn, size, candidateQueens);
 			this->board[randomColumn] = minConflictsIndex;
+
+			getConflictedQueens(candidateQueens, board, size);
+			numberOfTries++;
 		}
-		numberOfTries++;
 	}
-	if (!isFound)
-	{
-		Solve();
-	}
+
 }
 
 string Solver::toString() const
 {
 	stringstream ss;
 
-	for (int i = 0; i < this->size; i++)
+	for (int i = 0; i < size; i++)
 	{
-		ss << board[i] << " ";
+		for (int j = 0; j < size; j++)
+		{
+			if (board[j] == i)
+				ss << "1";
+			else
+				ss << "0";
+		}
+		ss << endl;
 	}
+
 	return ss.str();
 }
 
-void Solver::updateConflicts(const int* board, int* conflicts, const int size)
+int Solver::conflictsWith(const int* board, int row, int column, int size)
 {
-	resetArray(conflicts, size);
-	int queenRow = -1;
-	for (int queenColumn = 0; queenRow < size; queenColumn++)
-	{
-		queenRow = board[queenColumn];
-
-		//west
-		for (int i = 1; i < size && queenColumn - i >= 0; i++)
-		{
-			if (board[queenColumn - i] == queenRow)
-			{
-				conflicts[queenColumn]++;
-			}
-		}
-
-		//eset
-		for (int i = 1; i < size && queenColumn + i < size; i++)
-		{
-			if (board[queenColumn + i] == queenRow)
-			{
-				conflicts[queenColumn]++;
-			}
-		}
-
-		//north-west
-		for (int i = 1; i < size && queenColumn - i >= 0 && queenRow - i >= 0; i++)
-		{
-			if (board[queenColumn - i] == queenRow - i)
-			{
-				conflicts[queenColumn]++;
-			}
-		}
-
-		//north-eset
-		for (int i = 1; i < size && queenColumn + i < size && queenRow - i >= 0; i++)
-		{
-			if (board[queenColumn + i] == queenRow - i)
-			{
-				conflicts[queenColumn]++;
-			}
-		}
-
-		//south-west
-		for (int i = 1; i < size && queenColumn - i >= 0 && queenRow + i < size; i++)
-		{
-			if (board[queenColumn - i] == queenRow + i)
-			{
-				conflicts[queenColumn]++;
-			}
-		}
-
-		//south-eset
-		for (int i = 1; i < size && queenColumn + i < size && queenRow + i < size; i++)
-		{
-			if (board[queenColumn + i] == queenRow + i)
-			{
-				conflicts[queenColumn]++;
-			}
-		}
-	}
-}
-
-void Solver::resetArray(int* array, int size)
-{
+	int conflictsCount = 0;
 	for (int i = 0; i < size; i++)
 	{
-		array[i] = 0;
-	}
-}
-
-void Solver::conflictsInColumn(const int* board, int queenColumn, int* conflicts, int size)
-{
-	resetArray(conflicts, size);
-
-	for (int queenRow = 0; queenRow < size; queenRow++)
-	{
-		//west
-		for (int i = 1; i < size && queenColumn - i >= 0; i++)
-		{
-			if (board[queenColumn - i] == queenRow)
-			{
-				conflicts[queenRow]++;
-			}
-		}
-
-		//eset
-		for (int i = 1; i < size && queenColumn + i < size; i++)
-		{
-			if (board[queenColumn + i] == queenRow)
-			{
-				conflicts[queenRow]++;
-			}
-		}
-
-		//north-west
-		for (int i = 1; i < size && queenColumn - i >= 0 && queenRow - i >= 0; i++)
-		{
-			if (board[queenColumn - i] == queenRow - i)
-			{
-				conflicts[queenRow]++;
-			}
-		}
-
-		//north-eset
-		for (int i = 1; i < size && queenColumn + i < size && queenRow - i >= 0; i++)
-		{
-			if (board[queenColumn + i] == queenRow - i)
-			{
-				conflicts[queenRow]++;
-			}
-		}
-
-		//south-west
-		for (int i = 1; i < size && queenColumn - i >= 0 && queenRow + i < size; i++)
-		{
-			if (board[queenColumn - i] == queenRow + i)
-			{
-				conflicts[queenRow]++;
-			}
-		}
-
-		//south-eset
-		for (int i = 1; i < size && queenColumn + i < size && queenRow + i < size; i++)
-		{
-			if (board[queenColumn + i] == queenRow + i)
-			{
-				conflicts[queenRow]++;
-			}
-		}
-	}
-}
-
-bool Solver::isGoal(const int* board, int *conflictsBuffer, int size)
-{
-	updateConflicts(board, conflicts, size);
-
-	for (int i = 0; i < size; i++)
-	{
-		if (conflicts[i] != 0)
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-int Solver::minValue(const int* array, int size, int column)
-{
-	auto minIndex = board[column] == 0 ? 1 : 0;
-	auto min = array[minIndex];
-	for (int i = 0; i < size; i++)
-	{
-		if (i == board[column] && array[i] != min)
+		if (i == column)
 			continue;
-		if (array[i] < min)
-		{
-			min = array[i];
-			minIndex = i;
-		}
+		if (abs(i - column) == abs(board[i] - row) || board[i] == row)
+			conflictsCount++;
 	}
-	return minIndex;
+	return conflictsCount;
 }
 
-bool Solver::hasConflict(const int* board, int queenRow, int queenColumn, int size) const
+void Solver::swap(int* array, int i, int j)
 {
-	//west
-	for (int i = 1; i < size && queenColumn - i >= 0; i++)
+	auto temp = array[i];
+	array[i] = array[j];
+	array[j] = temp;
+}
+
+void Solver::arrayPermutation(int* array, int size)
+{
+	for (int i = 0; i < size; i++)
 	{
-		if (board[queenColumn - i] == queenRow)
+		swap(array, i, rand() % size);
+	}
+}
+
+void Solver::initBoard(int* board, int size)
+{
+	for (int i = 0; i < size; i++)
+	{
+		board[i] = i;
+	}
+
+	arrayPermutation(board, size);
+}
+
+void Solver::getConflictedQueens(vector<int>& list, const int *board, int boardSize)
+{
+	list.clear();
+	int conflictsCount = 0;
+	for (int i = 0; i < boardSize; i++)
+	{
+		if (conflictsCount = conflictsWith(board, board[i], i, boardSize))
 		{
-			return true;
+			list.push_back(i);
+		}
+	}
+}
+
+int Solver::minConflictIndexInColumn(const int* board, int column, int size, vector<int> &list)
+{
+	list.clear();
+	int minConflict = conflictsWith(board, 0, column, size);
+	int conflict = minConflict;
+	list.push_back(0);
+
+	for (int r = 1; r < size; r++)
+	{
+		conflict = conflictsWith(board, r, column, size);
+		if (conflict == minConflict)
+		{
+			list.push_back(r);
+		}
+		else if (conflict < minConflict)
+		{
+			list.clear();
+			minConflict = conflict;
+			list.push_back(r);
 		}
 	}
 
-	//eset
-	for (int i = 1; i < size && queenColumn + i < size; i++)
-	{
-		if (board[queenColumn + i] == queenRow)
-		{
-			return true;
-		}
-	}
-
-	//north-west
-	for (int i = 1; i < size && queenColumn - i >= 0 && queenRow - i >= 0; i++)
-	{
-		if (board[queenColumn - i] == queenRow - i)
-		{
-			return true;
-		}
-	}
-
-	//north-eset
-	for (int i = 1; i < size && queenColumn + i < size && queenRow - i >= 0; i++)
-	{
-		if (board[queenColumn + i] == queenRow - i)
-		{
-			return true;
-		}
-	}
-
-	//south-west
-	for (int i = 1; i < size && queenColumn - i >= 0 && queenRow + i < size; i++)
-	{
-		if (board[queenColumn - i] == queenRow + i)
-		{
-			return true;
-		}
-	}
-
-	//south-eset
-	for (int i = 1; i < size && queenColumn + i < size && queenRow + i < size; i++)
-	{
-		if (board[queenColumn + i] == queenRow + i)
-		{
-			return true;
-		}
-	}
-	return false;
+	return list.at(rand() % list.size());
 }
 
