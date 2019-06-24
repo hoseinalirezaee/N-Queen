@@ -2,6 +2,9 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <ctime>
+
+
 Solver::Solver(int problemsize)
 {
 	srand(time(NULL));
@@ -26,13 +29,12 @@ void Solver::solve()
 	candidateQueens.reserve(size);
 
 	getConflictedQueens(candidateQueens, board, size);
-	conflictedQueensCount = candidateQueens.size();
 
-	while (conflictedQueensCount)
+	while (candidateQueens.size())
 	{
 		arrayPermutation(this->board, this->size);
+		getConflictedQueens(candidateQueens, board, size);
 		numberOfTries = 0;
-		conflictedQueensCount = 0;
 
 		while ((conflictedQueensCount = candidateQueens.size()) && numberOfTries < MAX_NUMBER_OF_TRIES)
 		{
@@ -101,7 +103,7 @@ void Solver::initBoard(int* board, int size)
 		board[i] = i;
 	}
 
-	arrayPermutation(board, size);
+	//arrayPermutation(board, size);
 }
 
 void Solver::getConflictedQueens(vector<int>& list, const int *board, int boardSize)
@@ -141,4 +143,3 @@ int Solver::minConflictIndexInColumn(const int* board, int column, int size, vec
 
 	return list.at(rand() % list.size());
 }
-

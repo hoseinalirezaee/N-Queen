@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <ctime>
 #include <vector>
 using namespace std;
 
@@ -18,11 +17,10 @@ public:
 	string toString() const;
 
 private:
-
 	int conflictsWith(const int* board, int row, int column, int size);
 	inline void swap(int* array, int i, int j);
 	inline void arrayPermutation(int* array, int size);
 	void initBoard(int* board, int size);
-	void getConflictedQueens(vector<int>& list, const int *board, int boardSize);
-	int minConflictIndexInColumn(const int* board, int column, int size, vector<int> &list);
+	inline void getConflictedQueens(vector<int>& list, const int *board, int boardSize);
+	inline int minConflictIndexInColumn(const int* board, int column, int size, vector<int> &list);
 };
